@@ -7,14 +7,16 @@ import lombok.Setter;
 
 @Setter
 @Getter
-@MongoEntity(collection = "BQHAUDIT")
+@MongoEntity(collection = "promociones")
 public class PromotionEntity extends ReactivePanacheMongoEntity {
-    private String application;
-    private String applicationUser;
-    private String sessionUser;
-    private String transactionCode;
-    private String transactionDate;
-    private String message;
-    private String request;
-    private String response;
+    private String title;
+    private String storeName;
+    private Double amount;
+    private String discountRate;
+    private Double originalAmount;
+    private String description;
+    private String period;
+    private long stock;
+    private String imageUrl;
+    private String state;
 }

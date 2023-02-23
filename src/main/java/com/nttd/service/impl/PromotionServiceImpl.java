@@ -1,11 +1,9 @@
 package com.nttd.service.impl;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
+import org.bson.types.ObjectId;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import com.nttd.dto.PromotionDto;
 import com.nttd.dto.ResponseDto;
@@ -34,8 +32,8 @@ public class PromotionServiceImpl implements PromotionService {
 
     public Uni<ResponseDto> add(PromotionDto promotionDto) {
         try {
-            return promotionRepository.add(toAudit(promotionDto))
-                    .map(audit -> new ResponseDto(201, message001, topromotionDto(audit)))
+            return promotionRepository.add(toPromotion(promotionDto))
+                    .map(promotion -> new ResponseDto(201, message001, topromotionDto(promotion)))
                     .onFailure().recoverWithItem(error -> new ResponseDto(400, errorgeneric, error.getMessage()));
         } catch (Exception ex) {
             return Uni.createFrom().item(new ResponseDto(400, errorgeneric, ex.getMessage()));
@@ -45,21 +43,22 @@ public class PromotionServiceImpl implements PromotionService {
     public Uni<ResponseDto> listAll() {
         try {
             return promotionRepository.listAll()
-                    .map(audits -> {
+                    .map(promotions -> {
                         List<PromotionDto> lista = new ArrayList<>();
 
-                        for (PromotionEntity audit : audits) {
+                        for (PromotionEntity promotion : promotions) {
                             PromotionDto promotionDto = new PromotionDto();
 
-                            promotionDto.setIdAuditoria(audit.id.toString());
-                            promotionDto.setAplicacion(audit.getApplication());
-                            promotionDto.setUsuarioAplicacion(audit.getApplicationUser());
-                            promotionDto.setUsuarioSesion(audit.getSessionUser());
-                            promotionDto.setCodigoTransaccion(audit.getTransactionCode());
-                            promotionDto.setFechaTransaccion(audit.getTransactionDate());
-                            promotionDto.setMensaje(audit.getMessage());
-                            promotionDto.setRequest(audit.getRequest());
-                            promotionDto.setResponse(audit.getResponse());
+                            promotionDto.setIdPromocion(promotion.id.toString());
+                            promotionDto.setNombreTienda(promotion.getStoreName());
+                            promotionDto.setMonto(promotion.getAmount());
+                            promotionDto.setPorcentajeDescuento(promotion.getDiscountRate());
+                            promotionDto.setMontoOriginal(promotion.getOriginalAmount());
+                            promotionDto.setDescripcion(promotion.getDescription());
+                            promotionDto.setPeriodo(promotion.getPeriod());
+                            promotionDto.setCantidad(promotion.getStock());
+                            promotionDto.setImagenUrl(promotion.getImageUrl());
+                            promotionDto.setEstado(promotion.getState());
 
                             lista.add(promotionDto);
                         }
@@ -74,34 +73,61 @@ public class PromotionServiceImpl implements PromotionService {
         }
     }
 
-    PromotionEntity toAudit(PromotionDto promotionDto) {
-        PromotionEntity audit = new PromotionEntity();
-
-        audit.setApplication(promotionDto.getAplicacion());
-        audit.setApplicationUser(promotionDto.getUsuarioAplicacion());
-        audit.setSessionUser(promotionDto.getUsuarioSesion());
-        audit.setTransactionCode(String.valueOf(System.currentTimeMillis()));
-        DateFormat dateFormat = new SimpleDateFormat("EEE, d MMM yyyy, HH:mm:ss z");
-        audit.setTransactionDate(dateFormat.format(new Date()));
-        audit.setMessage(promotionDto.getMensaje());
-        audit.setRequest(promotionDto.getRequest());
-        audit.setResponse(promotionDto.getResponse());
-
-        return audit;
+    @Override
+    public Uni<ResponseDto> getById(String id) {
+        try {
+            return promotionRepository.getById(id)
+                    .map(promotion -> new ResponseDto(200, messagegeneric, topromotionDto(promotion)))
+                    .onFailure().recoverWithItem(error -> new ResponseDto(400, errorgeneric, error.getMessage()));
+        } catch (Exception ex) {
+            return Uni.createFrom().item(new ResponseDto(400, errorgeneric, ex.getMessage()));
+        }
     }
 
-    PromotionDto topromotionDto(PromotionEntity audit) {
+    @Override
+    public Uni<ResponseDto> edit(String id, PromotionDto promotionDto) {
+        promotionDto.setIdPromocion(id);
+        return promotionRepository.edit(toPromotion(promotionDto))
+                .map(promotion -> new ResponseDto(200, messagegeneric, topromotionDto(promotion)))
+                .onFailure().recoverWithItem(error -> new ResponseDto(400, errorgeneric, error.getMessage()));
+    }
+
+    @Override
+    public Uni<ResponseDto> remove(String id) {
+        return promotionRepository.remove(id)
+                .map(promotion -> new ResponseDto(200, messagegeneric, null))
+                .onFailure().recoverWithItem(error -> new ResponseDto(400, errorgeneric, error.getMessage()));
+    }
+
+    PromotionEntity toPromotion(PromotionDto promotionDto) {
+        PromotionEntity promotion = new PromotionEntity();
+        promotion.id = new ObjectId(promotionDto.getIdPromocion());
+        promotion.setStoreName(promotionDto.getNombreTienda());
+        promotion.setAmount(promotionDto.getMonto());
+        promotion.setDiscountRate(promotionDto.getPorcentajeDescuento());
+        promotion.setOriginalAmount(promotionDto.getMontoOriginal());
+        promotion.setDescription(promotionDto.getDescripcion());
+        promotion.setPeriod(promotionDto.getPeriodo());
+        promotion.setStock(promotionDto.getCantidad());
+        promotion.setImageUrl(promotionDto.getImagenUrl());
+        promotion.setState(promotionDto.getEstado());
+
+        return promotion;
+    }
+
+    PromotionDto topromotionDto(PromotionEntity promotion) {
         PromotionDto promotionDto = new PromotionDto();
 
-        promotionDto.setIdAuditoria(audit.id.toString());
-        promotionDto.setAplicacion(audit.getApplication());
-        promotionDto.setUsuarioAplicacion(audit.getApplicationUser());
-        promotionDto.setUsuarioSesion(audit.getSessionUser());
-        promotionDto.setCodigoTransaccion(audit.getTransactionCode());
-        promotionDto.setFechaTransaccion(audit.getTransactionDate());
-        promotionDto.setMensaje(audit.getMessage());
-        promotionDto.setRequest(audit.getRequest());
-        promotionDto.setResponse(audit.getResponse());
+        promotionDto.setIdPromocion(promotion.id.toString());
+        promotionDto.setNombreTienda(promotion.getStoreName());
+        promotionDto.setMonto(promotion.getAmount());
+        promotionDto.setPorcentajeDescuento(promotion.getDiscountRate());
+        promotionDto.setMontoOriginal(promotion.getOriginalAmount());
+        promotionDto.setDescripcion(promotion.getDescription());
+        promotionDto.setPeriodo(promotion.getPeriod());
+        promotionDto.setCantidad(promotion.getStock());
+        promotionDto.setImagenUrl(promotion.getImageUrl());
+        promotionDto.setEstado(promotion.getState());
 
         return promotionDto;
     }

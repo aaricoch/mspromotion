@@ -4,13 +4,15 @@ import lombok.Data;
 
 @Data
 public class PromotionDto {
-    private String idAuditoria;
-    private String aplicacion;
-    private String usuarioAplicacion;
-    private String usuarioSesion;
-    private String codigoTransaccion;
-    private String fechaTransaccion;
-    private String mensaje;
-    private String request;
-    private String response;
+    private String idPromocion;
+    private String titulo;
+    private String nombreTienda;
+    private Double monto;
+    private String porcentajeDescuento;
+    private Double montoOriginal;
+    private String descripcion;
+    private String periodo;
+    private long cantidad;
+    private String imagenUrl;
+    private String estado;
 }
